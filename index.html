@@ -1,8 +1,7 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tetris Arcade</title>
     <style>
         /* Configurações Globais */
@@ -11,6 +10,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; /* Previne zoom e scroll no mobile */
         }
 
         body {
@@ -163,7 +163,7 @@
         #exit-game-btn {
             position: absolute;
             top: 30px;
-            left: 290px; /* Posicionado ao lado do HUD principal */
+            left: 290px;
             background: rgba(255, 0, 85, 0.2);
             color: #ff0055;
             border: 2px solid #ff0055;
@@ -183,6 +183,113 @@
             box-shadow: 0 0 15px rgba(255, 0, 85, 0.6);
         }
 
+        /* Controles Mobile */
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        .mobile-sys-btns {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .sys-btn {
+            background: rgba(21, 23, 36, 0.9);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .mobile-bottom-area {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: auto;
+        }
+
+        .d-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .d-pad-row {
+            display: flex;
+            gap: 40px;
+        }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            color: #fff;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            user-select: none;
+        }
+
+        .control-btn:active {
+            background: rgba(0, 255, 204, 0.5);
+            border-color: #00ffcc;
+            transform: scale(0.95);
+        }
+
+        .btn-large {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            background: rgba(255, 0, 85, 0.3);
+            border-color: rgba(255, 0, 85, 0.6);
+        }
+
+        /* Responsividade para Celulares */
+        @media (max-width: 850px) {
+            #mobile-controls { display: block; }
+            #game-ui { 
+                top: 60px; left: 10px; 
+                transform: scale(0.8); transform-origin: top left;
+                width: 200px;
+            }
+            #hold-ui { 
+                top: 60px; right: 10px; 
+                transform: scale(0.8); transform-origin: top right;
+            }
+            #exit-game-btn { top: 10px; left: auto; right: 10px; }
+            .controls-list { display: none; } /* Esconde os controles de teclado no celular */
+        }
+
         /* Telas de Overlay do Jogo (GameOver / Pausa) */
         #game-over-overlay {
             display: none;
@@ -193,14 +300,16 @@
             background: rgba(13, 14, 21, 0.95);
             border: 2px solid #ff0055;
             color: #ff0055;
-            padding: 50px;
+            padding: 30px;
             border-radius: 16px;
             text-align: center;
-            z-index: 2020;
+            z-index: 4000;
             box-shadow: 0 0 40px rgba(255, 0, 85, 0.6);
+            width: 90%;
+            max-width: 400px;
         }
 
-        #game-over-overlay h2 { font-size: 3.5rem; margin-bottom: 15px; }
+        #game-over-overlay h2 { font-size: 2.5rem; margin-bottom: 15px; }
         #game-over-overlay p { color: #fff; font-size: 1.2rem; margin-bottom: 30px; }
         
         #reset-game-btn {
@@ -214,7 +323,6 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        #reset-game-btn:hover { background: #ff3377; }
 
         #pause-overlay {
             display: none;
@@ -225,12 +333,12 @@
             background: rgba(13, 14, 21, 0.95);
             border: 2px solid #ffe600;
             color: #ffe600;
-            padding: 40px 60px;
+            padding: 20px 40px;
             border-radius: 16px;
             text-align: center;
-            z-index: 2020;
+            z-index: 4000;
             box-shadow: 0 0 30px rgba(255, 230, 0, 0.4);
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
             letter-spacing: 2px;
         }
@@ -241,6 +349,30 @@
     <button id="start-game-btn">🕹️ JOGAR TETRIS</button>
 
     <div id="tetris-overlay">
+        <!-- Controles de Toque Mobile -->
+        <div id="mobile-controls">
+            <div class="mobile-sys-btns">
+                <button id="m-btn-pause" class="sys-btn">⏸️ Pausar</button>
+                <button id="m-btn-undo" class="sys-btn">↩️ Desfazer</button>
+                <button id="m-btn-hud" class="sys-btn">👁️ HUD</button>
+            </div>
+            
+            <div class="mobile-bottom-area">
+                <div class="d-pad">
+                    <button id="m-btn-up" class="control-btn">↻</button>
+                    <div class="d-pad-row">
+                        <button id="m-btn-left" class="control-btn">⬅️</button>
+                        <button id="m-btn-right" class="control-btn">➡️</button>
+                    </div>
+                    <button id="m-btn-down" class="control-btn">⬇️</button>
+                </div>
+                <div class="action-btns">
+                    <button id="m-btn-hold" class="control-btn">🔄</button>
+                    <button id="m-btn-hard" class="control-btn btn-large">⏬</button>
+                </div>
+            </div>
+        </div>
+
         <div id="game-ui">
             <h3>SCORE</h3>
             <div id="game-score">0</div>
@@ -305,8 +437,9 @@
         const holdCtx = holdCanvas.getContext('2d');
         const holdText = document.getElementById('hold-text');
 
-        const BLOCK_SIZE = 50; 
-        const HOLD_BLOCK_SIZE = 30; 
+        // Modificado para 'let' para adaptação em telas mobile
+        let BLOCK_SIZE = 50; 
+        let HOLD_BLOCK_SIZE = 30; 
         let COLS = 10;
         let ROWS = 20;
         let playAreaWidth = 0;
@@ -402,14 +535,17 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            startX = Math.floor(canvas.width * 0.25);
-            playAreaWidth = Math.floor(canvas.width * 0.50);
-
-            COLS = Math.floor(playAreaWidth / BLOCK_SIZE);
-            ROWS = Math.ceil(canvas.height / BLOCK_SIZE);
+            const isMobile = window.innerWidth <= 850;
             
-            const remainderX = playAreaWidth - (COLS * BLOCK_SIZE);
-            startX += Math.floor(remainderX / 2);
+            // Ajuste dinâmico para garantir o formato do Tetris na tela do celular
+            playAreaWidth = Math.floor(canvas.width * (isMobile ? 0.90 : 0.40));
+            BLOCK_SIZE = Math.floor(playAreaWidth / 10);
+            
+            // Força a manter o padrão 10x20
+            COLS = 10;
+            ROWS = 20;
+            
+            startX = Math.floor((canvas.width - (COLS * BLOCK_SIZE)) / 2);
 
             if (grid.length > 0) {
                 let oldGrid = grid;
@@ -939,6 +1075,45 @@
             drawGrid();
             gameInterval = requestAnimationFrame(update);
         }
+
+        // ============================================
+        // EVENTOS DE BOTÕES MOBILE (Touch / Mouse)
+        // ============================================
+        function bindContinuousBtn(id, key) {
+            const btn = document.getElementById(id);
+            if(!btn) return;
+            const down = (e) => { e.preventDefault(); keysPressed[key] = true; };
+            const up = (e) => { e.preventDefault(); keysPressed[key] = false; };
+            btn.addEventListener('pointerdown', down);
+            btn.addEventListener('pointerup', up);
+            btn.addEventListener('pointerleave', up);
+            btn.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        function bindActionBtn(id, actionFunc) {
+            const btn = document.getElementById(id);
+            if(!btn) return;
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                actionFunc();
+            });
+            btn.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        // Direcionais contínuos
+        bindContinuousBtn('m-btn-left', 'ArrowLeft');
+        bindContinuousBtn('m-btn-right', 'ArrowRight');
+        bindContinuousBtn('m-btn-down', 'ArrowDown');
+
+        // Ações Imediatas
+        bindActionBtn('m-btn-up', playerRotate);
+        bindActionBtn('m-btn-hard', playerHardDrop);
+        bindActionBtn('m-btn-hold', playerSwapPieceWithHold);
+        
+        // Botões de Sistema Mobile
+        bindActionBtn('m-btn-pause', togglePause);
+        bindActionBtn('m-btn-undo', undoLastMove);
+        bindActionBtn('m-btn-hud', toggleHud);
 
         difficultySelect.addEventListener('change', (e) => {
             dropInterval = DIFFICULTY_SPEEDS[e.target.value];
